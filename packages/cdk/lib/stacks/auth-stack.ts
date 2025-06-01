@@ -1,12 +1,12 @@
 import * as cdk from 'aws-cdk-lib';
-import * as cognito from 'aws-cdk-lib/aws-cognito';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
-import * as logs from 'aws-cdk-lib/aws-logs';
+import {aws_cognito as cognito} from 'aws-cdk-lib';
+import { aws_iam as iam } from 'aws-cdk-lib';
+import { aws_lambda as lambda} from 'aws-cdk-lib';
+import {aws_lambda_nodejs as nodejs} from 'aws-cdk-lib/';
+import {aws_logs as logs} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
-import { UserGroup } from '../types/src/index';
+import { UserGroup } from '@health-command-center/types';
 
 /**
  * Authentication Stack for Health Command Center

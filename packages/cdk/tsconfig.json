@@ -24,5 +24,10 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
+   "dependencies": {
+    "aws-cdk-lib": "^2.0.0",
+    "constructs": "^10.0.0",
+    "@health-command-center/types": "workspace:*"
+  },
   "exclude": ["node_modules", "cdk.out", "lib", "test"]
 }
