@@ -1,0 +1,22 @@
+{
+  "name": "health-command-center",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Macronutrient Tracker App - Health Command Center",
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "deploy:domain": "cd cdk && pnpm deploy:domain",
+    "deploy:auth": "cd cdk && pnpm deploy:auth",
+    "deploy:api": "cd cdk && pnpm deploy:api",
+    "deploy:frontend": "cd cdk && pnpm deploy:frontend",
+    "deploy:all": "pnpm deploy:domain && pnpm deploy:auth && pnpm deploy:api && pnpm deploy:frontend"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.1"
+}

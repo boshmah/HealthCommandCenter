@@ -1,0 +1,21 @@
+{
+  "name": "@health-command-center/types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript types for Health Command Center",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "watch": "tsc --watch"
+  },
+  "keywords": ["types", "typescript", "health-command-center"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist"
+  ]
+}

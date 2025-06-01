@@ -134,3 +134,40 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Dependencies
+.pnpm-store/
+
+# pnpm
+pnpm-lock.yaml
+.pnpm-debug.log
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.turbo/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# AWS CDK
+cdk.out/
+*.js
+*.d.ts
+!jest.config.js
+!cdk.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
