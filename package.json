@@ -9,12 +9,14 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "bootstrap": "cd packages/cdk && pnpm cdk bootstrap",
+    "bootstrap:us-east-1": "cd packages/cdk && pnpm cdk bootstrap --region us-east-1",
+    "deploy:cert": "cd packages/cdk && pnpm deploy:cert",
     "deploy:domain": "cd packages/cdk && pnpm deploy:domain",
     "deploy:auth": "cd packages/cdk && pnpm deploy:auth",
     "deploy:api": "cd packages/cdk && pnpm deploy:api",
     "deploy:frontend": "cd packages/cdk && pnpm deploy:frontend",
     "deploy:cloudfront": "cd packages/cdk && pnpm deploy:cloudfront",
-    "deploy:all": "pnpm deploy:domain && pnpm deploy:auth && pnpm deploy:api && pnpm deploy:frontend && pnpm deploy:cloudfront"
+    "deploy:all": "pnpm deploy:cert && pnpm deploy:domain && pnpm deploy:auth && pnpm deploy:api && pnpm deploy:frontend && pnpm deploy:cloudfront"
   },
   "engines": {
     "node": ">=18.0.0",
