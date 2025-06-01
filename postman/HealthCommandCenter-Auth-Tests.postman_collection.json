@@ -1,0 +1,562 @@
+{
+  "info": {
+    "_postman_id": "health-command-center-auth",
+    "name": "Health Command Center - Auth Stack Tests",
+    "description": "Complete test suite for Cognito authentication flows",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "cognitoRegion",
+      "value": "us-west-2",
+      "type": "string"
+    },
+    {
+      "key": "userPoolId",
+      "value": "us-west-2_LyXz9fWYU",
+      "type": "string"
+    },
+    {
+      "key": "clientId",
+      "value": "6r3v1d00nj5osbsb29g60nt7cb",
+      "type": "string"
+    },
+    {
+      "key": "testEmail",
+      "value": "test-{{$timestamp}}@example.com",
+      "type": "string"
+    },
+    {
+      "key": "testPassword",
+      "value": "TestPassword123!",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "session",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "confirmationCode",
+      "value": "123456",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Sign Up New User",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate unique email for this test run",
+              "const timestamp = new Date().getTime();",
+              "const email = `bogdan.shmat@wsu.edu`;",
+              "pm.collectionVariables.set('testEmail', email);",
+              "console.log('Testing with email:', email);"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test('Response has UserSub', function () {",
+              "    pm.expect(response).to.have.property('UserSub');",
+              "    pm.collectionVariables.set('username', response.UserSub);",
+              "});",
+              "",
+              "pm.test('User confirmation is pending', function () {",
+              "    pm.expect(response.UserConfirmed).to.be.false;",
+              "});",
+              "",
+              "if (response.Session) {",
+              "    pm.collectionVariables.set('session', response.Session);",
+              "}",
+              "",
+              "console.log('User created with ID:', response.UserSub);",
+              "console.log('\\n⚠️  IMPORTANT: Check your email for the verification code!');",
+              "console.log('Update the confirmationCode variable in this collection before running the next request.');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-amz-json-1.1"
+          },
+          {
+            "key": "X-Amz-Target",
+            "value": "AWSCognitoIdentityProviderService.SignUp"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"ClientId\": \"{{clientId}}\",\n    \"Username\": \"{{testEmail}}\",\n    \"Password\": \"{{testPassword}}\",\n    \"UserAttributes\": [\n        {\n            \"Name\": \"email\",\n            \"Value\": \"{{testEmail}}\"\n        }\n    ]\n}"
+        },
+        "url": {
+          "raw": "https://cognito-idp.{{cognitoRegion}}.amazonaws.com/",
+          "protocol": "https",
+          "host": [
+            "cognito-idp",
+            "{{cognitoRegion}}",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Confirm Sign Up (Manual Code Entry)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// ⚠️  UPDATE THE confirmationCode VARIABLE BEFORE RUNNING THIS REQUEST",
+              "// The code is sent to the email address used in signup",
+              "",
+              "const code = pm.collectionVariables.get('confirmationCode');",
+              "if (code === '123456') {",
+              "    console.warn('⚠️  Please update the confirmationCode variable with the actual code from your email!');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "console.log('✅ Email verified successfully!');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-amz-json-1.1"
+          },
+          {
+            "key": "X-Amz-Target",
+            "value": "AWSCognitoIdentityProviderService.ConfirmSignUp"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"ClientId\": \"{{clientId}}\",\n    \"Username\": \"{{testEmail}}\",\n    \"ConfirmationCode\": \"{{confirmationCode}}\"\n}"
+        },
+        "url": {
+          "raw": "https://cognito-idp.{{cognitoRegion}}.amazonaws.com/",
+          "protocol": "https",
+          "host": [
+            "cognito-idp",
+            "{{cognitoRegion}}",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Sign In (Initiate Auth)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test('Authentication successful', function () {",
+              "    pm.expect(response).to.have.property('AuthenticationResult');",
+              "});",
+              "",
+              "if (response.AuthenticationResult) {",
+              "    pm.collectionVariables.set('accessToken', response.AuthenticationResult.AccessToken);",
+              "    pm.collectionVariables.set('idToken', response.AuthenticationResult.IdToken);",
+              "    pm.collectionVariables.set('refreshToken', response.AuthenticationResult.RefreshToken);",
+              "    ",
+              "    console.log('✅ Sign in successful!');",
+              "    console.log('Access Token (first 20 chars):', response.AuthenticationResult.AccessToken.substring(0, 20) + '...');",
+              "    console.log('Token Type:', response.AuthenticationResult.TokenType);",
+              "    console.log('Expires In:', response.AuthenticationResult.ExpiresIn, 'seconds');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-amz-json-1.1"
+          },
+          {
+            "key": "X-Amz-Target",
+            "value": "AWSCognitoIdentityProviderService.InitiateAuth"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"AuthFlow\": \"USER_PASSWORD_AUTH\",\n    \"ClientId\": \"{{clientId}}\",\n    \"AuthParameters\": {\n        \"USERNAME\": \"{{testEmail}}\",\n        \"PASSWORD\": \"{{testPassword}}\"\n    }\n}"
+        },
+        "url": {
+          "raw": "https://cognito-idp.{{cognitoRegion}}.amazonaws.com/",
+          "protocol": "https",
+          "host": [
+            "cognito-idp",
+            "{{cognitoRegion}}",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Get User Info",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test('User has correct email', function () {",
+              "    const emailAttr = response.UserAttributes.find(attr => attr.Name === 'email');",
+              "    pm.expect(emailAttr.Value).to.equal(pm.collectionVariables.get('testEmail'));",
+              "});",
+              "",
+              "console.log('User Info:');",
+              "console.log('Username:', response.Username);",
+              "response.UserAttributes.forEach(attr => {",
+              "    console.log(`${attr.Name}: ${attr.Value}`);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-amz-json-1.1"
+          },
+          {
+            "key": "X-Amz-Target",
+            "value": "AWSCognitoIdentityProviderService.GetUser"
+          },
+          {
+            "key": "Authorization",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"AccessToken\": \"{{accessToken}}\"\n}"
+        },
+        "url": {
+          "raw": "https://cognito-idp.{{cognitoRegion}}.amazonaws.com/",
+          "protocol": "https",
+          "host": [
+            "cognito-idp",
+            "{{cognitoRegion}}",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "5. Refresh Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test('New tokens received', function () {",
+              "    pm.expect(response).to.have.property('AuthenticationResult');",
+              "});",
+              "",
+              "if (response.AuthenticationResult) {",
+              "    pm.collectionVariables.set('accessToken', response.AuthenticationResult.AccessToken);",
+              "    pm.collectionVariables.set('idToken', response.AuthenticationResult.IdToken);",
+              "    ",
+              "    console.log('✅ Token refreshed successfully!');",
+              "    console.log('New Access Token (first 20 chars):', response.AuthenticationResult.AccessToken.substring(0, 20) + '...');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-amz-json-1.1"
+          },
+          {
+            "key": "X-Amz-Target",
+            "value": "AWSCognitoIdentityProviderService.InitiateAuth"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"AuthFlow\": \"REFRESH_TOKEN_AUTH\",\n    \"ClientId\": \"{{clientId}}\",\n    \"AuthParameters\": {\n        \"REFRESH_TOKEN\": \"{{refreshToken}}\"\n    }\n}"
+        },
+        "url": {
+          "raw": "https://cognito-idp.{{cognitoRegion}}.amazonaws.com/",
+          "protocol": "https",
+          "host": [
+            "cognito-idp",
+            "{{cognitoRegion}}",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "6. Forgot Password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test('Code delivery details received', function () {",
+              "    pm.expect(response).to.have.property('CodeDeliveryDetails');",
+              "});",
+              "",
+              "console.log('Password reset code sent to:', response.CodeDeliveryDetails.Destination);",
+              "console.log('Delivery Medium:', response.CodeDeliveryDetails.DeliveryMedium);",
+              "console.log('\\n⚠️  Check your email for the password reset code!');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-amz-json-1.1"
+          },
+          {
+            "key": "X-Amz-Target",
+            "value": "AWSCognitoIdentityProviderService.ForgotPassword"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"ClientId\": \"{{clientId}}\",\n    \"Username\": \"{{testEmail}}\"\n}"
+        },
+        "url": {
+          "raw": "https://cognito-idp.{{cognitoRegion}}.amazonaws.com/",
+          "protocol": "https",
+          "host": [
+            "cognito-idp",
+            "{{cognitoRegion}}",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "7. Sign Out",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// Clear tokens",
+              "pm.collectionVariables.set('accessToken', '');",
+              "pm.collectionVariables.set('idToken', '');",
+              "pm.collectionVariables.set('refreshToken', '');",
+              "",
+              "console.log('✅ User signed out successfully!');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-amz-json-1.1"
+          },
+          {
+            "key": "X-Amz-Target",
+            "value": "AWSCognitoIdentityProviderService.GlobalSignOut"
+          },
+          {
+            "key": "Authorization",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"AccessToken\": \"{{accessToken}}\"\n}"
+        },
+        "url": {
+          "raw": "https://cognito-idp.{{cognitoRegion}}.amazonaws.com/",
+          "protocol": "https",
+          "host": [
+            "cognito-idp",
+            "{{cognitoRegion}}",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "8. Invalid Login Attempt",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test('Error is NotAuthorizedException', function () {",
+              "    pm.expect(response.__type).to.include('NotAuthorizedException');",
+              "});",
+              "",
+              "console.log('✅ Invalid login correctly rejected');",
+              "console.log('Error:', response.message);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-amz-json-1.1"
+          },
+          {
+            "key": "X-Amz-Target",
+            "value": "AWSCognitoIdentityProviderService.InitiateAuth"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"AuthFlow\": \"USER_PASSWORD_AUTH\",\n    \"ClientId\": \"{{clientId}}\",\n    \"AuthParameters\": {\n        \"USERNAME\": \"{{testEmail}}\",\n        \"PASSWORD\": \"WrongPassword123!\"\n    }\n}"
+        },
+        "url": {
+          "raw": "https://cognito-idp.{{cognitoRegion}}.amazonaws.com/",
+          "protocol": "https",
+          "host": [
+            "cognito-idp",
+            "{{cognitoRegion}}",
+            "amazonaws",
+            "com"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      }
+    }
+  ]
+}

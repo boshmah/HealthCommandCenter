@@ -8,15 +8,20 @@
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
-    "deploy:domain": "cd cdk && pnpm deploy:domain",
-    "deploy:auth": "cd cdk && pnpm deploy:auth",
-    "deploy:api": "cd cdk && pnpm deploy:api",
-    "deploy:frontend": "cd cdk && pnpm deploy:frontend",
-    "deploy:all": "pnpm deploy:domain && pnpm deploy:auth && pnpm deploy:api && pnpm deploy:frontend"
+    "bootstrap": "cd packages/cdk && pnpm cdk bootstrap",
+    "deploy:domain": "cd packages/cdk && pnpm deploy:domain",
+    "deploy:auth": "cd packages/cdk && pnpm deploy:auth",
+    "deploy:api": "cd packages/cdk && pnpm deploy:api",
+    "deploy:frontend": "cd packages/cdk && pnpm deploy:frontend",
+    "deploy:cloudfront": "cd packages/cdk && pnpm deploy:cloudfront",
+    "deploy:all": "pnpm deploy:domain && pnpm deploy:auth && pnpm deploy:api && pnpm deploy:frontend && pnpm deploy:cloudfront"
   },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@8.15.1"
+  "packageManager": "pnpm@8.15.1",
+  "dependencies": {
+    "health-command-center": "file:"
+  }
 }

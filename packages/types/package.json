@@ -9,7 +9,11 @@
     "clean": "rm -rf dist",
     "watch": "tsc --watch"
   },
-  "keywords": ["types", "typescript", "health-command-center"],
+  "keywords": [
+    "types",
+    "typescript",
+    "health-command-center"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -17,5 +21,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "dependencies": {
+    "@health-command-center/types": "file:"
+  }
 }
