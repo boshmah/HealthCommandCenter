@@ -10,16 +10,16 @@ This Postman collection provides comprehensive testing for the Cognito authentic
 
 2. **Pre-configured Variables**
    - The collection comes pre-configured with the following values:
-     - `userPoolId`: us-west-2_LyXz9fWYU
-     - `clientId`: 6r3v1d00nj5osbsb29g60nt7cb
+     - `userPoolId`:
+     - `clientId`: 
    - Other variables are automatically managed by the collection
 
 3. **Verify Your Cognito Setup**
    ```bash
    # Your deployed auth stack should show these outputs:
-   # AuthStack.UserPoolId = us-west-2_LyXz9fWYU
-   # AuthStack.UserPoolClientId = 6r3v1d00nj5osbsb29g60nt7cb
-   # AuthStack.UserPoolDomain = https://cognito-idp.us-west-2.amazonaws.com/us-west-2_LyXz9fWYU
+   # AuthStack.UserPoolId = 
+   # AuthStack.UserPoolClientId = 
+   # AuthStack.UserPoolDomain = 
    ```
 
 ## Running the Tests

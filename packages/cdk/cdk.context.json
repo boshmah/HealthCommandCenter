@@ -1,9 +1,9 @@
 {
-  "hosted-zone:account=418272761873:domainName=healthcommandcenter.io:region=us-west-2": {
+  "hosted-zone:account=418272761873:domainName=healthcommandcenter.io:region=us-east-1": {
     "Id": "/hostedzone/Z05044702LKBGHU2UCUFR",
     "Name": "healthcommandcenter.io."
   },
-  "hosted-zone:account=418272761873:domainName=healthcommandcenter.io:region=us-east-1": {
+  "hosted-zone:account=418272761873:domainName=healthcommandcenter.io:region=us-west-2": {
     "Id": "/hostedzone/Z05044702LKBGHU2UCUFR",
     "Name": "healthcommandcenter.io."
   }

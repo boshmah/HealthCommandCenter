@@ -139,9 +139,6 @@ dist
 
 # Dependencies
 .pnpm-store/
-
-# pnpm
-pnpm-lock.yaml
 .pnpm-debug.log
 
 # Build outputs
