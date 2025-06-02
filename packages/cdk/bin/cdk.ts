@@ -11,13 +11,11 @@ const app = new cdk.App();
  * Environment configurations
  */
 const usEast1Env = {
-  account: process.env.CDK_DEFAULT_ACCOUNT,
   region: 'us-east-1', // For CloudFront certificates
 };
 
 const usWest2Env = {
-  account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: process.env.CDK_DEFAULT_REGION || 'us-west-2', // Main application region
+  region: 'us-west-2', 
 };
 
 /**

@@ -1,27 +1,19 @@
 {
   "name": "@health-command-center/types",
-  "version": "1.0.0",
-  "description": "Shared TypeScript types for Health Command Center",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "clean": "rm -rf dist",
-    "watch": "tsc --watch"
+    "watch": "tsc -w",
+    "clean": "rimraf dist"
   },
-  "keywords": [
-    "types",
-    "typescript",
-    "health-command-center"
-  ],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "rimraf": "^5.0.1",
+    "typescript": "~5.3.3"
   },
-  "files": [
-    "dist"
-  ],
   "dependencies": {
     "@health-command-center/types": "file:"
   }

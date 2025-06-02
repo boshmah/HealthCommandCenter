@@ -2,6 +2,7 @@
   "name": "@health-command-center/cdk",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
@@ -30,6 +31,7 @@
     "aws-cdk-lib": "2.118.0",
     "aws-lambda": "^1.0.7",
     "constructs": "^10.4.2",
+    "path": "^0.12.7",
     "source-map-support": "^0.5.21"
   }
 }
