@@ -2,3 +2,4 @@ packages:
   - 'packages/*'
   - 'cdk'
   - 'frontend'
+  - 'types'

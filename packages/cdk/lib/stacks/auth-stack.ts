@@ -6,12 +6,7 @@ import {aws_lambda_nodejs as nodejs} from 'aws-cdk-lib';
 import {aws_logs as logs} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
-import { UserGroup } from '@health-command-center/types';
-
-// Convert __dirname equivalent for ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { UserGroup } from '@health-command-center/types'; 
 
 /**
  * Authentication Stack for Health Command Center

@@ -15,6 +15,5 @@
     "typescript": "~5.3.3"
   },
   "dependencies": {
-    "@health-command-center/types": "file:"
   }
 }

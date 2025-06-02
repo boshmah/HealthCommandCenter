@@ -2,28 +2,33 @@
   "name": "health-command-center",
   "version": "1.0.0",
   "private": true,
-  "description": "Macronutrient Tracker App - Health Command Center",
+  "description": "Macronutrient Tracker App",
   "scripts": {
-    "dev": "pnpm --parallel -r dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
-    "bootstrap": "cd packages/cdk && pnpm cdk bootstrap",
-    "bootstrap:us-east-1": "cd packages/cdk && pnpm cdk bootstrap --region us-east-1",
-    "deploy:cert": "cd packages/cdk && pnpm deploy:cert",
-    "deploy:domain": "cd packages/cdk && pnpm deploy:domain",
-    "deploy:auth": "cd packages/cdk && pnpm deploy:auth",
-    "deploy:api": "cd packages/cdk && pnpm deploy:api",
-    "deploy:frontend": "cd packages/cdk && pnpm deploy:frontend",
-    "deploy:cloudfront": "cd packages/cdk && pnpm deploy:cloudfront",
-    "deploy:all": "pnpm deploy:cert && pnpm deploy:domain && pnpm deploy:auth && pnpm deploy:api && pnpm deploy:frontend && pnpm deploy:cloudfront"
+    "synth": "pnpm --filter @health-command-center/cdk synth",
+    "deploy:cert": "pnpm --filter @health-command-center/cdk deploy:cert",
+    "deploy:domain": "pnpm --filter @health-command-center/cdk deploy:domain",
+    "deploy:auth": "pnpm --filter @health-command-center/cdk deploy:auth",
+    "deploy:api": "pnpm --filter @health-command-center/cdk deploy:api",
+    "deploy:frontend": "pnpm --filter @health-command-center/cdk deploy:frontend",
+    "deploy:cloudfront": "pnpm --filter @health-command-center/cdk deploy:cloudfront",
+    "deploy:all": "pnpm --filter @health-command-center/cdk deploy:all",
+    "cdk": "pnpm --filter @health-command-center/cdk cdk"
   },
-  "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
+  "keywords": [
+    "aws",
+    "cdk",
+    "react",
+    "typescript",
+    "node",
+    "serverless"
+  ],
+  "author": "Your Name",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "~5.3.3",
+    "cross-env": "^7.0.3"
   },
-  "packageManager": "pnpm@8.15.1",
-  "dependencies": {
-    "health-command-center": "file:"
-  }
+  "packageManager": "pnpm@8.6.0"
 }

@@ -5,40 +5,29 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 
 /**
+ * Properties for the DomainStack.
+ */
+export interface DomainStackProps extends cdk.StackProps {
+  /**
+   * The domain name to manage (e.g., example.com).
+   */
+  readonly domainName: string;
+}
+
+/**
  * Domain Stack for Health Command Center
  * 
- * This stack manages the domain configuration for HealthCommandCenter.io
- * It includes:
- * - Route 53 hosted zone reference (already created when domain was registered)
- * - SSL/TLS certificate creation and validation for regional services
- * - Parameter store values for cross-stack references
- * 
- * NOTE: CloudFront certificates must be created in us-east-1, so they are
- * handled in a separate CloudFrontCertificateStack deployed to us-east-1
- * 
- * @class DomainStack
- * @extends {cdk.Stack}
- * 
- * AWS Services Used:
- * - Route 53: DNS management
- * - AWS Certificate Manager (ACM): SSL/TLS certificates
- * - Systems Manager Parameter Store: Cross-stack value sharing
+ * Purpose:
+ * - Manages the Route 53 Hosted Zone.
+ * - Potentially creates regional SSL/TLS certificates if needed (not for CloudFront).
  * 
  * Cost Considerations:
- * - Route 53 Hosted Zone: ~$0.50/month per hosted zone
- * - SSL Certificates: FREE (AWS Certificate Manager)
- * - DNS Queries: $0.40 per million queries
- * - Parameter Store: FREE for standard parameters (up to 10,000 parameters)
+ * - Route 53 Hosted Zone: $0.50 per month per hosted zone.
+ * - Route 53 Queries: Costs vary based on query type and volume (typically low for small apps).
  * 
- * Deployment Notes:
- * - This stack should be deployed FIRST (after CloudFrontCertificateStack)
- * - Certificate validation can take 5-30 minutes
- * - DNS propagation can take up to 48 hours (though usually much faster)
- * 
- * Security Considerations:
- * - SSL certificates are automatically renewed by ACM
- * - Certificates include both apex domain and www subdomain
- * - Wildcard certificate included for future subdomain flexibility
+ * Deployment Order:
+ * - Deploy CloudFrontCertificateStack (in us-east-1) first.
+ * - Then deploy this stack (in your primary region, e.g., us-west-2).
  */
 export class DomainStack extends cdk.Stack {
   /**
@@ -53,10 +42,10 @@ export class DomainStack extends cdk.Stack {
    */
   public readonly certificate: acm.Certificate;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: DomainStackProps) {
     super(scope, id, props);
 
-    const domainName = 'healthcommandcenter.io';
+    const domainName = props.domainName;
     const wwwDomainName = `www.${domainName}`;
 
     /**

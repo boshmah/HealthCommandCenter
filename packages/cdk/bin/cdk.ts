@@ -1,21 +1,36 @@
 #!/usr/bin/env node
-import 'source-map-support/register';
+import 'source-map-support/register.js';
 import * as cdk from 'aws-cdk-lib';
-import { DomainStack } from '../lib/stacks/domain-stack';
-import { CloudFrontCertificateStack } from '../lib/stacks/cloudfront-certificate-stack';
-import { AuthStack } from '../lib/stacks/auth-stack';
+import { DomainStack } from '../lib/stacks/domain-stack.js';
+import { CloudFrontCertificateStack } from '../lib/stacks/cloudfront-certificate-stack.js';
+import { AuthStack } from '../lib/stacks/auth-stack.js';
 
 const app = new cdk.App();
+
+const domainName = 'healthcommandcenter.io'; // Or from context/env
+
+// Prioritize a custom environment variable for account ID, then fallback to CDK_DEFAULT_ACCOUNT
+const account = process.env.MY_AWS_ACCOUNT_ID || process.env.CDK_DEFAULT_ACCOUNT;
+const primaryRegion = 'us-west-2'; // Your primary deployment region
+const cloudfrontCertRegion = 'us-east-1'; // ACM certificates for CloudFront must be in us-east-1
+
+if (!account) {
+  throw new Error(
+    'Account ID not found. Please set MY_AWS_ACCOUNT_ID or ensure AWS CLI is configured for CDK_DEFAULT_ACCOUNT.'
+  );
+}
 
 /**
  * Environment configurations
  */
 const usEast1Env = {
-  region: 'us-east-1', // For CloudFront certificates
+  account: account,
+  region: cloudfrontCertRegion, // For CloudFront certificates
 };
 
 const usWest2Env = {
-  region: 'us-west-2', 
+  account: account,
+  region: primaryRegion, 
 };
 
 /**
@@ -23,7 +38,8 @@ const usWest2Env = {
  * Deploy FIRST with: pnpm cdk deploy CloudFrontCertificateStack --region us-east-1
  */
 const cloudfrontCertStack = new CloudFrontCertificateStack(app, 'CloudFrontCertificateStack', {
-  env: usEast1Env,
+  domainName,
+  env: usEast1Env, // Use the predefined env
   description: 'CloudFront SSL certificate for Health Command Center (us-east-1)',
 });
 
@@ -32,7 +48,8 @@ const cloudfrontCertStack = new CloudFrontCertificateStack(app, 'CloudFrontCerti
  * Deploy SECOND with: pnpm cdk deploy DomainStack
  */
 const domainStack = new DomainStack(app, 'DomainStack', {
-  env: usWest2Env,
+  domainName,
+  env: usWest2Env, // Use the predefined env
   description: 'Domain configuration for Health Command Center',
 });
 
@@ -41,7 +58,7 @@ const domainStack = new DomainStack(app, 'DomainStack', {
  * Deploy THIRD with: pnpm cdk deploy AuthStack
  */
 const authStack = new AuthStack(app, 'AuthStack', {
-  env: usWest2Env,
+  env: usWest2Env, // Use the predefined env, now includes account
   description: 'Authentication infrastructure for Health Command Center',
 });
 

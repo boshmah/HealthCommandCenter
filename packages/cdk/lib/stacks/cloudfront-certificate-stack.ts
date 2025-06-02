@@ -5,6 +5,16 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 
 /**
+ * Properties for the CloudFrontCertificateStack.
+ */
+export interface CloudFrontCertificateStackProps extends cdk.StackProps {
+  /**
+   * The domain name for which the certificate will be created (e.g., example.com).
+   */
+  readonly domainName: string;
+}
+
+/**
  * CloudFront Certificate Stack for Health Command Center
  * 
  * This stack MUST be deployed to us-east-1 region as CloudFront requires
@@ -35,16 +45,16 @@ export class CloudFrontCertificateStack extends cdk.Stack {
    */
   public readonly certificate: acm.Certificate;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: CloudFrontCertificateStackProps) {
     super(scope, id, {
       ...props,
       env: {
-        ...props?.env,
+        ...props.env,
         region: 'us-east-1', // Force us-east-1 region
       },
     });
 
-    const domainName = 'healthcommandcenter.io';
+    const domainName = props.domainName;
     const wwwDomainName = `www.${domainName}`;
 
     /**
