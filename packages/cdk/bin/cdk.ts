@@ -9,8 +9,35 @@ const app = new cdk.App();
 
 const domainName = 'healthcommandcenter.io'; // Or from context/env
 
+/**
+ * Extract account ID from ARN or use as-is if already an account ID
+ * @param value - Either an AWS account ID or an IAM ARN
+ * @returns The AWS account ID
+ */
+function extractAccountId(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  
+  // Check if it's an ARN (starts with "arn:")
+  if (value.startsWith('arn:')) {
+    // ARN format: arn:aws:service:region:account-id:resource
+    const arnParts = value.split(':');
+    if (arnParts.length >= 5) {
+      return arnParts[4]; // The account ID is the 5th element (index 4)
+    }
+    throw new Error(`Invalid ARN format: ${value}`);
+  }
+  
+  // Validate it looks like an account ID (12 digits)
+  if (/^\d{12}$/.test(value)) {
+    return value;
+  }
+  
+  throw new Error(`Invalid account ID format: ${value}. Expected 12-digit account ID or valid ARN.`);
+}
+
 // Prioritize a custom environment variable for account ID, then fallback to CDK_DEFAULT_ACCOUNT
-const account = process.env.MY_AWS_ACCOUNT_ID || process.env.CDK_DEFAULT_ACCOUNT;
+const rawAccountValue = process.env.MY_AWS_ACCOUNT_ID || process.env.CDK_DEFAULT_ACCOUNT;
+const account = extractAccountId(rawAccountValue);
 const primaryRegion = 'us-west-2'; // Your primary deployment region
 const cloudfrontCertRegion = 'us-east-1'; // ACM certificates for CloudFront must be in us-east-1
 
