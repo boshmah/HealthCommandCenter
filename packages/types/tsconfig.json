@@ -2,7 +2,8 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ES2022",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "DOM"], //OM for console support
+    "types": ["node"], //  node types
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",

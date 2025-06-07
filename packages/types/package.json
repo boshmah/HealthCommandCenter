@@ -1,19 +1,17 @@
 {
   "name": "@health-command-center/types",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "watch": "tsc -w",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "rimraf": "^5.0.1",
-    "typescript": "~5.3.3"
-  },
-  "dependencies": {
+    "@types/node": "^20.11.0",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.3"
   }
 }

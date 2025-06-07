@@ -55,17 +55,20 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     console.log(`Found ${result.Items?.length || 0} foods for date ${date}`);
 
     // Transform entities to response format
-    const foods: FoodResponse[] = (result.Items || []).map((item: FoodEntity) => ({
-      foodId: item.foodId,
-      name: item.name,
-      protein: item.protein,
-      carbs: item.carbs,
-      fats: item.fats,
-      calories: item.calories,
-      date: item.date,
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-    }));
+    const foods: FoodResponse[] = (result.Items || []).map((item) => {
+      const foodEntity = item as FoodEntity;
+      return {
+        foodId: foodEntity.foodId,
+        name: foodEntity.name,
+        protein: foodEntity.protein,
+        carbs: foodEntity.carbs,
+        fats: foodEntity.fats,
+        calories: foodEntity.calories,
+        date: foodEntity.date,
+        createdAt: foodEntity.createdAt,
+        updatedAt: foodEntity.updatedAt,
+      };
+    });
 
     // Calculate daily totals
     const totals = foods.reduce((acc, food) => ({
