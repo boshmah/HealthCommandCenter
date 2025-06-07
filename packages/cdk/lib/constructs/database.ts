@@ -37,19 +37,5 @@ export class Database extends Construct {
       pointInTimeRecovery: true,
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
     });
-
-    // Add a type attribute for entity identification
-    this.table.addGlobalSecondaryIndex({
-      indexName: 'GSI1',
-      partitionKey: {
-        name: 'GSI1PK',
-        type: dynamodb.AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'GSI1SK',
-        type: dynamodb.AttributeType.STRING,
-      },
-      projectionType: dynamodb.ProjectionType.ALL,
-    });
   }
 }

@@ -4,6 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import { DomainStack } from '../lib/stacks/domain-stack.js';
 import { CloudFrontCertificateStack } from '../lib/stacks/cloudfront-certificate-stack.js';
 import { AuthStack } from '../lib/stacks/auth-stack.js';
+import { ApiStack } from '../lib/stacks/api-stack.js';
 
 const app = new cdk.App();
 
@@ -92,10 +93,21 @@ const authStack = new AuthStack(app, 'AuthStack', {
 // Add logical dependencies (doesn't affect parallel deployments)
 authStack.addDependency(domainStack);
 
-// Future stacks to be added:
-// const apiStack = new ApiStack(app, 'ApiStack', { env: usWest2Env });
-// apiStack.addDependency(authStack);
+/**
+ * API Stack - API Gateway, Lambda functions, and DynamoDB
+ * Deploy FOURTH with: pnpm cdk deploy ApiStack
+ */
+const apiStack = new ApiStack(app, 'ApiStack', {
+  env: usWest2Env,
+  description: 'API infrastructure for Health Command Center',
+  userPool: authStack.userPool,
+  userPoolClient: authStack.userPoolClient,
+});
 
+// API stack depends on auth stack
+apiStack.addDependency(authStack);
+
+// Future stacks to be added:
 // const frontendStack = new FrontendStack(app, 'FrontendStack', { env: usWest2Env });
 // frontendStack.addDependency(domainStack);
 
@@ -105,7 +117,7 @@ authStack.addDependency(domainStack);
 // cloudFrontStack.addDependency(apiStack);
 
 // Tag all stacks with common tags
-for (const construct of [cloudfrontCertStack, domainStack, authStack]) {
+for (const construct of [cloudfrontCertStack, domainStack, authStack, apiStack]) {
   cdk.Tags.of(construct).add('Application', 'HealthCommandCenter');
   cdk.Tags.of(construct).add('ManagedBy', 'CDK');
 }
