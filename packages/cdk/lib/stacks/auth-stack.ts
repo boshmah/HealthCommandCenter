@@ -101,7 +101,7 @@ export class AuthStack extends cdk.Stack {
      * The Lambda code should be created at: lib/lambdas/custom-message/index.ts
      */
     const customMessageLambda = new nodejs.NodejsFunction(this, 'CustomMessageLambda', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
       entry: path.join(__dirname, '../lambdas/api/auth/custom-message/index.ts'),
       functionName: 'health-command-center-custom-message',
@@ -113,13 +113,18 @@ export class AuthStack extends cdk.Stack {
       },
       logRetention: logs.RetentionDays.TWO_WEEKS,
       bundling: {
-        minify: true,
-        sourceMap: false,
+        minify: false, // Disable minification for readability
+        sourceMap: true, // Enable source maps
+        sourcesContent: true, // Include source content
         target: 'es2020',
-        // Only mark AWS SDK as external since it's provided by Lambda runtime
+        // Remove format: 'esm' as it's not compatible
+        mainFields: ['module', 'main'],
+        // AWS SDK is provided by Lambda runtime
         externalModules: ['@aws-sdk/*'],
         // Force local bundling instead of Docker
         forceDockerBundling: false,
+        // Include source maps in the output
+        sourceMapMode: nodejs.SourceMapMode.INLINE,
       },
     });
 

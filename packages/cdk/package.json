@@ -1,28 +1,37 @@
 {
   "name": "@health-command-center/cdk",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "npx cdk",
-    "deploy:cert": "npx cdk deploy CloudFrontCertificateStack",
+    "cdk": "cdk",
+    "synth": "npx cdk synth",
+    "deploy:cert": "npx cdk deploy CloudFrontCertificateStack --region us-east-1",
     "deploy:domain": "npx cdk deploy DomainStack",
     "deploy:auth": "npx cdk deploy AuthStack",
-    "deploy:api": "npx cdk deploy ApiStack",
-    "deploy:web": "npx cdk deploy FrontendStack",
+    "deploy:api": "pnpm run predeploy:api && npx cdk deploy ApiStack",
+    "deploy:frontend": "npx cdk deploy FrontendStack",
     "deploy:cloudfront": "npx cdk deploy CloudFrontStack",
-    "deploy:all": "pnpm deploy:domain && pnpm deploy:cert && pnpm deploy:auth && pnpm deploy:api && pnpm deploy:web && pnpm deploy:cloudfront"
+    "deploy:all": "pnpm run deploy:cert && pnpm run deploy:domain && pnpm run deploy:auth && pnpm run deploy:api",
+    "destroy:all": "npx cdk destroy --all",
+    "diff": "npx cdk diff",
+    "bootstrap": "npx cdk bootstrap",
+    "layer:install": "cd lib/layers/shared && pnpm install",
+    "layer:update": "cd lib/layers/shared && pnpm update",
+    "predeploy:api": "pnpm run layer:install"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.130",
     "@types/node": "^20.11.0",
     "@types/uuid": "^9.0.7",
+    "aws-cdk": "^2.118.0",
     "tsx": "^4.7.0",
     "typescript": "~5.3.3",
-    "esbuild": "~0.21.0"
+    "esbuild": "~0.21.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.481.0",

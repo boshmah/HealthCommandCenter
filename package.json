@@ -14,7 +14,10 @@
     "deploy:frontend": "pnpm --filter @health-command-center/cdk deploy:frontend",
     "deploy:cloudfront": "pnpm --filter @health-command-center/cdk deploy:cloudfront",
     "deploy:all": "pnpm --filter @health-command-center/cdk deploy:all",
-    "cdk": "pnpm --filter @health-command-center/cdk cdk"
+    "cdk": "pnpm --filter @health-command-center/cdk cdk",
+    "layer:install": "pnpm --filter @health-command-center/cdk layer:install",
+    "layer:update": "pnpm --filter @health-command-center/cdk layer:update",
+    "predeploy:api": "pnpm run layer:install"
   },
   "keywords": [
     "aws",

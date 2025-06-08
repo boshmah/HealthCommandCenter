@@ -11,6 +11,8 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { fileURLToPath } from 'url';
 import * as path from 'path';
 import { Database } from '../constructs/database.js';
+import { SharedLambdaLayer } from '../constructs/lambda-layer.js';
+import type { Table } from 'aws-cdk-lib/aws-dynamodb';
 
 /**
  * Properties for the API Stack
@@ -57,7 +59,7 @@ export class ApiStack extends cdk.Stack {
   /**
    * The DynamoDB table for storing data
    */
-  public readonly table: dynamodb.Table;
+  public readonly table: Table;
 
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
@@ -72,6 +74,12 @@ export class ApiStack extends cdk.Stack {
      */
     const database = new Database(this, 'Database');
     this.table = database.table;
+
+    /**
+     * Create Shared Lambda Layer
+     * This contains common dependencies to reduce Lambda package sizes
+     */
+    const sharedLayer = new SharedLambdaLayer(this, 'SharedLayer');
 
     /**
      * Create REST API
@@ -150,11 +158,37 @@ export class ApiStack extends cdk.Stack {
     };
 
     /**
+     * Common bundling configuration for readable Lambda code
+     * - Minification disabled for AWS Console readability
+     * - Source maps enabled for debugging
+     * - External modules that are provided by the layer
+     */
+    const commonBundling: nodejs.BundlingOptions = {
+      minify: false, // Disable minification for readability
+      sourceMap: true, // Enable source maps for debugging
+      sourcesContent: true, // Include source content in source maps
+      target: 'es2020',
+      // Remove format: 'esm' as it's not compatible
+      mainFields: ['module', 'main'],
+      // External modules provided by the layer
+      externalModules: [
+        '@aws-sdk/client-dynamodb',
+        '@aws-sdk/lib-dynamodb',
+        '@aws-sdk/client-cognito-identity-provider',
+        'uuid',
+      ],
+      // Don't use Docker for bundling
+      forceDockerBundling: false,
+      // Include source maps in the output
+      sourceMapMode: nodejs.SourceMapMode.INLINE,
+    };
+
+    /**
      * Create Food Lambda
      * POST /foods
      */
     const createFoodLambda = new nodejs.NodejsFunction(this, 'CreateFoodLambda', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
       entry: path.join(__dirname, '../lambdas/api/food/create-food/index.ts'),
       functionName: 'health-command-center-create-food',
@@ -163,15 +197,10 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
       environment: commonEnv,
       role: lambdaRole,
+      layers: [sharedLayer.layer], // Add the shared layer
       logRetention: logs.RetentionDays.TWO_WEEKS,
       depsLockFilePath: path.join(__dirname, '../../../../pnpm-lock.yaml'),
-      bundling: {
-        minify: true,
-        sourceMap: false,
-        target: 'es2020',
-        externalModules: ['aws-sdk'], // Provided by Lambda runtime
-        forceDockerBundling: false,
-      },
+      bundling: commonBundling,
     });
 
     /**
@@ -179,7 +208,7 @@ export class ApiStack extends cdk.Stack {
      * GET /foods?date=YYYY-MM-DD
      */
     const listFoodsLambda = new nodejs.NodejsFunction(this, 'ListFoodsLambda', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
       entry: path.join(__dirname, '../lambdas/api/food/list-foods/index.ts'),
       functionName: 'health-command-center-list-foods',
@@ -188,15 +217,10 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
       environment: commonEnv,
       role: lambdaRole,
+      layers: [sharedLayer.layer], // Add the shared layer
       logRetention: logs.RetentionDays.TWO_WEEKS,
       depsLockFilePath: path.join(__dirname, '../../../../pnpm-lock.yaml'),
-      bundling: {
-        minify: true,
-        sourceMap: false,
-        target: 'es2020',
-        externalModules: ['aws-sdk'],
-        forceDockerBundling: false,
-      },
+      bundling: commonBundling,
     });
 
     /**
@@ -204,7 +228,7 @@ export class ApiStack extends cdk.Stack {
      * GET /foods/{foodId}
      */
     const getFoodLambda = new nodejs.NodejsFunction(this, 'GetFoodLambda', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
       entry: path.join(__dirname, '../lambdas/api/food/get-food/index.ts'),
       functionName: 'health-command-center-get-food',
@@ -213,15 +237,10 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
       environment: commonEnv,
       role: lambdaRole,
+      layers: [sharedLayer.layer], // Add the shared layer
       logRetention: logs.RetentionDays.TWO_WEEKS,
       depsLockFilePath: path.join(__dirname, '../../../../pnpm-lock.yaml'),
-      bundling: {
-        minify: true,
-        sourceMap: false,
-        target: 'es2020',
-        externalModules: ['aws-sdk'],
-        forceDockerBundling: false,
-      },
+      bundling: commonBundling,
     });
 
     /**
@@ -229,7 +248,7 @@ export class ApiStack extends cdk.Stack {
      * PUT /foods/{foodId}
      */
     const updateFoodLambda = new nodejs.NodejsFunction(this, 'UpdateFoodLambda', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
       entry: path.join(__dirname, '../lambdas/api/food/update-food/index.ts'),
       functionName: 'health-command-center-update-food',
@@ -238,15 +257,10 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
       environment: commonEnv,
       role: lambdaRole,
+      layers: [sharedLayer.layer], // Add the shared layer
       logRetention: logs.RetentionDays.TWO_WEEKS,
       depsLockFilePath: path.join(__dirname, '../../../../pnpm-lock.yaml'),
-      bundling: {
-        minify: true,
-        sourceMap: false,
-        target: 'es2020',
-        externalModules: ['aws-sdk'],
-        forceDockerBundling: false,
-      },
+      bundling: commonBundling,
     });
 
     /**
@@ -254,7 +268,7 @@ export class ApiStack extends cdk.Stack {
      * DELETE /foods/{foodId}
      */
     const deleteFoodLambda = new nodejs.NodejsFunction(this, 'DeleteFoodLambda', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'handler',
       entry: path.join(__dirname, '../lambdas/api/food/delete-food/index.ts'),
       functionName: 'health-command-center-delete-food',
@@ -263,15 +277,10 @@ export class ApiStack extends cdk.Stack {
       memorySize: 256,
       environment: commonEnv,
       role: lambdaRole,
+      layers: [sharedLayer.layer], // Add the shared layer
       logRetention: logs.RetentionDays.TWO_WEEKS,
       depsLockFilePath: path.join(__dirname, '../../../../pnpm-lock.yaml'),
-      bundling: {
-        minify: true,
-        sourceMap: false,
-        target: 'es2020',
-        externalModules: ['aws-sdk'],
-        forceDockerBundling: false,
-      },
+      bundling: commonBundling,
     });
 
     /**
