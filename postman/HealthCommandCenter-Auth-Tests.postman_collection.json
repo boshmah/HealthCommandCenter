@@ -60,6 +60,31 @@
       "key": "confirmationCode",
       "value": "123456",
       "type": "string"
+    },
+    {
+      "key": "apiGatewayUrl",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdFoodId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testFoodName",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testDate",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "yesterdayDate",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -557,6 +582,655 @@
           ]
         }
       }
+    },
+    {
+      "name": "Food API Tests",
+      "item": [
+        {
+          "name": "9. Create Food Entry",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generate test data",
+                  "const today = new Date().toISOString().split('T')[0];",
+                  "const timestamp = new Date().getTime();",
+                  "const foodName = `Test Food ${timestamp}`;",
+                  "",
+                  "pm.collectionVariables.set('testFoodName', foodName);",
+                  "pm.collectionVariables.set('testDate', today);",
+                  "",
+                  "console.log('Creating food entry:', foodName);",
+                  "console.log('Date:', today);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Response has foodId', function () {",
+                  "    pm.expect(response).to.have.property('foodId');",
+                  "    pm.collectionVariables.set('createdFoodId', response.foodId);",
+                  "});",
+                  "",
+                  "pm.test('Response has correct food name', function () {",
+                  "    pm.expect(response.name).to.equal(pm.collectionVariables.get('testFoodName'));",
+                  "});",
+                  "",
+                  "pm.test('Calories calculated correctly', function () {",
+                  "    // 30g protein * 4 = 120",
+                  "    // 45g carbs * 4 = 180",
+                  "    // 10g fats * 9 = 90",
+                  "    // Total = 390",
+                  "    pm.expect(response.calories).to.equal(390);",
+                  "});",
+                  "",
+                  "pm.test('Response has timestamps', function () {",
+                  "    pm.expect(response).to.have.property('createdAt');",
+                  "    pm.expect(response).to.have.property('updatedAt');",
+                  "});",
+                  "",
+                  "console.log('✅ Food created successfully!');",
+                  "console.log('Food ID:', response.foodId);",
+                  "console.log('Calories:', response.calories);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{idToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"{{testFoodName}}\",\n    \"protein\": 30,\n    \"carbs\": 45,\n    \"fats\": 10,\n    \"date\": \"{{testDate}}\"\n}"
+            },
+            "url": {
+              "raw": "{{apiGatewayUrl}}/foods",
+              "host": [
+                "{{apiGatewayUrl}}"
+              ],
+              "path": [
+                "foods"
+              ]
+            }
+          }
+        },
+        {
+          "name": "10. Create Multiple Foods for Testing",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// This creates additional foods for list testing",
+                  "const foods = [",
+                  "    { name: 'Breakfast Eggs', protein: 12, carbs: 2, fats: 10 },",
+                  "    { name: 'Lunch Chicken', protein: 40, carbs: 0, fats: 5 },",
+                  "    { name: 'Dinner Salmon', protein: 35, carbs: 0, fats: 15 }",
+                  "];",
+                  "",
+                  "const currentFood = foods[pm.info.iteration || 0];",
+                  "pm.variables.set('currentFoodName', currentFood.name);",
+                  "pm.variables.set('currentProtein', currentFood.protein);",
+                  "pm.variables.set('currentCarbs', currentFood.carbs);",
+                  "pm.variables.set('currentFats', currentFood.fats);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "console.log('Created:', response.name);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{idToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"{{currentFoodName}}\",\n    \"protein\": {{currentProtein}},\n    \"carbs\": {{currentCarbs}},\n    \"fats\": {{currentFats}},\n    \"date\": \"{{testDate}}\"\n}"
+            },
+            "url": {
+              "raw": "{{apiGatewayUrl}}/foods",
+              "host": [
+                "{{apiGatewayUrl}}"
+              ],
+              "path": [
+                "foods"
+              ]
+            }
+          }
+        },
+        {
+          "name": "11. Get Specific Food",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Response has correct foodId', function () {",
+                  "    pm.expect(response.foodId).to.equal(pm.collectionVariables.get('createdFoodId'));",
+                  "});",
+                  "",
+                  "pm.test('Response has all required fields', function () {",
+                  "    pm.expect(response).to.have.property('name');",
+                  "    pm.expect(response).to.have.property('protein');",
+                  "    pm.expect(response).to.have.property('carbs');",
+                  "    pm.expect(response).to.have.property('fats');",
+                  "    pm.expect(response).to.have.property('calories');",
+                  "    pm.expect(response).to.have.property('date');",
+                  "});",
+                  "",
+                  "console.log('✅ Food retrieved successfully!');",
+                  "console.log('Food:', response.name);",
+                  "console.log('Macros:', `P:${response.protein}g C:${response.carbs}g F:${response.fats}g`);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{idToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{apiGatewayUrl}}/foods/{{createdFoodId}}",
+              "host": [
+                "{{apiGatewayUrl}}"
+              ],
+              "path": [
+                "foods",
+                "{{createdFoodId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "12. List Foods for Today",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Response has foods array', function () {",
+                  "    pm.expect(response).to.have.property('foods');",
+                  "    pm.expect(response.foods).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Response has at least 4 foods', function () {",
+                  "    pm.expect(response.foods.length).to.be.at.least(4);",
+                  "});",
+                  "",
+                  "pm.test('Response has correct date', function () {",
+                  "    pm.expect(response.date).to.equal(pm.collectionVariables.get('testDate'));",
+                  "});",
+                  "",
+                  "pm.test('Response has totals', function () {",
+                  "    pm.expect(response.totals).to.have.property('protein');",
+                  "    pm.expect(response.totals).to.have.property('carbs');",
+                  "    pm.expect(response.totals).to.have.property('fats');",
+                  "    pm.expect(response.totals).to.have.property('calories');",
+                  "});",
+                  "",
+                  "pm.test('Created food is in the list', function () {",
+                  "    const createdFood = response.foods.find(f => f.foodId === pm.collectionVariables.get('createdFoodId'));",
+                  "    pm.expect(createdFood).to.not.be.undefined;",
+                  "});",
+                  "",
+                  "console.log('✅ Food list retrieved successfully!');",
+                  "console.log('Total foods:', response.count);",
+                  "console.log('Daily totals:', response.totals);",
+                  "console.log('Foods:', response.foods.map(f => f.name).join(', '));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{idToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{apiGatewayUrl}}/foods?date={{testDate}}",
+              "host": [
+                "{{apiGatewayUrl}}"
+              ],
+              "path": [
+                "foods"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "{{testDate}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "13. Update Food Entry",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Update the food with new values",
+                  "const updatedName = pm.collectionVariables.get('testFoodName') + ' (Updated)';",
+                  "pm.variables.set('updatedFoodName', updatedName);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Food name updated', function () {",
+                  "    pm.expect(response.name).to.include('(Updated)');",
+                  "});",
+                  "",
+                  "pm.test('Calories recalculated correctly', function () {",
+                  "    // 25g protein * 4 = 100",
+                  "    // 50g carbs * 4 = 200",
+                  "    // 15g fats * 9 = 135",
+                  "    // Total = 435",
+                  "    pm.expect(response.calories).to.equal(435);",
+                  "});",
+                  "",
+                  "pm.test('UpdatedAt timestamp changed', function () {",
+                  "    pm.expect(response.updatedAt).to.not.equal(response.createdAt);",
+                  "});",
+                  "",
+                  "console.log('✅ Food updated successfully!');",
+                  "console.log('New name:', response.name);",
+                  "console.log('New calories:', response.calories);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{idToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"{{updatedFoodName}}\",\n    \"protein\": 25,\n    \"carbs\": 50,\n    \"fats\": 15,\n    \"date\": \"{{testDate}}\"\n}"
+            },
+            "url": {
+              "raw": "{{apiGatewayUrl}}/foods/{{createdFoodId}}",
+              "host": [
+                "{{apiGatewayUrl}}"
+              ],
+              "path": [
+                "foods",
+                "{{createdFoodId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "14. Update Food with Different Date",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Get yesterday's date",
+                  "const yesterday = new Date();",
+                  "yesterday.setDate(yesterday.getDate() - 1);",
+                  "const yesterdayStr = yesterday.toISOString().split('T')[0];",
+                  "pm.collectionVariables.set('yesterdayDate', yesterdayStr);",
+                  "",
+                  "console.log('Moving food to date:', yesterdayStr);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Food date changed', function () {",
+                  "    pm.expect(response.date).to.equal(pm.collectionVariables.get('yesterdayDate'));",
+                  "});",
+                  "",
+                  "pm.test('Food ID remains the same', function () {",
+                  "    pm.expect(response.foodId).to.equal(pm.collectionVariables.get('createdFoodId'));",
+                  "});",
+                  "",
+                  "console.log('✅ Food moved to different date successfully!');",
+                  "console.log('New date:', response.date);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{idToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"{{updatedFoodName}}\",\n    \"protein\": 25,\n    \"carbs\": 50,\n    \"fats\": 15,\n    \"date\": \"{{yesterdayDate}}\"\n}"
+            },
+            "url": {
+              "raw": "{{apiGatewayUrl}}/foods/{{createdFoodId}}",
+              "host": [
+                "{{apiGatewayUrl}}"
+              ],
+              "path": [
+                "foods",
+                "{{createdFoodId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "15. List Foods for Yesterday",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Moved food is in yesterday list', function () {",
+                  "    const movedFood = response.foods.find(f => f.foodId === pm.collectionVariables.get('createdFoodId'));",
+                  "    pm.expect(movedFood).to.not.be.undefined;",
+                  "});",
+                  "",
+                  "console.log('✅ Verified food was moved to yesterday!');",
+                  "console.log('Foods for', response.date + ':', response.foods.map(f => f.name).join(', '));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{idToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{apiGatewayUrl}}/foods?date={{yesterdayDate}}",
+              "host": [
+                "{{apiGatewayUrl}}"
+              ],
+              "path": [
+                "foods"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "{{yesterdayDate}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "16. Delete Food Entry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 204', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.test('Response body is empty', function () {",
+                  "    pm.expect(pm.response.text()).to.equal('');",
+                  "});",
+                  "",
+                  "console.log('✅ Food deleted successfully!');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{idToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{apiGatewayUrl}}/foods/{{createdFoodId}}",
+              "host": [
+                "{{apiGatewayUrl}}"
+              ],
+              "path": [
+                "foods",
+                "{{createdFoodId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "17. Verify Food Deleted",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Error message indicates food not found', function () {",
+                  "    pm.expect(response.error).to.equal('Food not found');",
+                  "});",
+                  "",
+                  "console.log('✅ Confirmed food was deleted!');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{idToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{apiGatewayUrl}}/foods/{{createdFoodId}}",
+              "host": [
+                "{{apiGatewayUrl}}"
+              ],
+              "path": [
+                "foods",
+                "{{createdFoodId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "18. Test Invalid Date Format",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "const response = pm.response.json();",
+                  "",
+                  "pm.test('Error message about date format', function () {",
+                  "    pm.expect(response.error).to.include('Invalid date format');",
+                  "});",
+                  "",
+                  "console.log('✅ Invalid date format correctly rejected');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{idToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{apiGatewayUrl}}/foods?date=invalid-date",
+              "host": [
+                "{{apiGatewayUrl}}"
+              ],
+              "path": [
+                "foods"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "invalid-date"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "19. Test Unauthorized Access",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "console.log('✅ Unauthorized access correctly rejected');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "invalid-token"
+              }
+            ],
+            "url": {
+              "raw": "{{apiGatewayUrl}}/foods",
+              "host": [
+                "{{apiGatewayUrl}}"
+              ],
+              "path": [
+                "foods"
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }
