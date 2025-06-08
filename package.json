@@ -10,14 +10,14 @@
     "deploy:cert": "pnpm --filter @health-command-center/cdk deploy:cert",
     "deploy:domain": "pnpm --filter @health-command-center/cdk deploy:domain",
     "deploy:auth": "pnpm --filter @health-command-center/cdk deploy:auth",
-    "deploy:api": "pnpm --filter @health-command-center/cdk deploy:api",
+    "deploy:api": "pnpm run layer:install && pnpm --filter @health-command-center/cdk deploy:api",
     "deploy:frontend": "pnpm --filter @health-command-center/cdk deploy:frontend",
     "deploy:cloudfront": "pnpm --filter @health-command-center/cdk deploy:cloudfront",
     "deploy:all": "pnpm --filter @health-command-center/cdk deploy:all",
     "cdk": "pnpm --filter @health-command-center/cdk cdk",
     "layer:install": "pnpm --filter @health-command-center/cdk layer:install",
     "layer:update": "pnpm --filter @health-command-center/cdk layer:update",
-    "predeploy:api": "pnpm run layer:install"
+    "layer:clean": "pnpm --filter @health-command-center/cdk layer:clean"
   },
   "keywords": [
     "aws",

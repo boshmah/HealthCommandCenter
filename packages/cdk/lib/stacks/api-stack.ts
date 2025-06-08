@@ -3,7 +3,6 @@ import { Construct } from 'constructs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
-import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -168,19 +167,19 @@ export class ApiStack extends cdk.Stack {
       sourceMap: true, // Enable source maps for debugging
       sourcesContent: true, // Include source content in source maps
       target: 'es2020',
-      // Remove format: 'esm' as it's not compatible
       mainFields: ['module', 'main'],
       // External modules provided by the layer
       externalModules: [
-        '@aws-sdk/client-dynamodb',
-        '@aws-sdk/lib-dynamodb',
-        '@aws-sdk/client-cognito-identity-provider',
+        '@aws-sdk/*', // Exclude all AWS SDK v3 packages
         'uuid',
+        // Add any other dependencies that are in your layer
       ],
       // Don't use Docker for bundling
       forceDockerBundling: false,
       // Include source maps in the output
       sourceMapMode: nodejs.SourceMapMode.INLINE,
+      // Ensure node_modules from layer are accessible
+      nodeModules: ['@aws-sdk/client-dynamodb', '@aws-sdk/lib-dynamodb', '@aws-sdk/client-cognito-identity-provider', 'uuid'],
     };
 
     /**

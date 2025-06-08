@@ -1,9 +1,9 @@
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
 import * as fs from 'fs';
+import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 
 /**
  * Shared Lambda Layer for Health Command Center
@@ -57,61 +57,49 @@ export class SharedLambdaLayer extends Construct {
               try {
                 // Check if the layer directory exists
                 if (!fs.existsSync(layerDir)) {
-                  console.log(`Creating layer directory: ${layerDir}`);
-                  fs.mkdirSync(layerDir, { recursive: true });
+                  console.error(`Layer directory does not exist: ${layerDir}`);
+                  return false;
                 }
 
                 // Check if package.json exists
                 const packageJsonPath = path.join(layerDir, 'package.json');
                 if (!fs.existsSync(packageJsonPath)) {
-                  console.log('Creating default package.json for layer...');
-                  const defaultPackageJson = {
-                    name: 'health-command-center-shared-layer',
-                    version: '1.0.0',
-                    description: 'Shared dependencies for Lambda functions',
-                    private: true,
-                    dependencies: {
-                      '@aws-sdk/client-dynamodb': '^3.481.0',
-                      '@aws-sdk/lib-dynamodb': '^3.481.0',
-                      '@aws-sdk/client-cognito-identity-provider': '^3.481.0',
-                      'uuid': '^9.0.1'
-                    }
-                  };
-                  fs.writeFileSync(packageJsonPath, JSON.stringify(defaultPackageJson, null, 2));
+                  console.error(`package.json not found in layer directory: ${packageJsonPath}`);
+                  return false;
                 }
 
-                // Copy package.json to output directory
-                fs.copyFileSync(packageJsonPath, path.join(outputDir, 'package.json'));
+                // Create nodejs directory structure first
+                const nodejsDir = path.join(outputDir, 'nodejs');
+                if (!fs.existsSync(nodejsDir)) {
+                  fs.mkdirSync(nodejsDir, { recursive: true });
+                }
 
-                // Install dependencies using npm (more universally available than pnpm in CI/CD)
+                // Copy package.json to nodejs directory to install there directly
+                const targetPackageJson = path.join(nodejsDir, 'package.json');
+                fs.copyFileSync(packageJsonPath, targetPackageJson);
+
+                // Check if pnpm-lock.yaml exists and copy it
+                const lockFilePath = path.join(layerDir, 'pnpm-lock.yaml');
+                if (fs.existsSync(lockFilePath)) {
+                  fs.copyFileSync(lockFilePath, path.join(nodejsDir, 'pnpm-lock.yaml'));
+                }
+
+                // Install dependencies directly in nodejs directory
                 console.log('Installing layer dependencies...');
                 execSync('npm install --production', {
-                  cwd: outputDir,
+                  cwd: nodejsDir,
                   stdio: 'inherit',
+                  env: { ...process.env, npm_config_update_notifier: 'false' }
                 });
 
                 // Clean up package files
                 const filesToRemove = ['package.json', 'package-lock.json', 'pnpm-lock.yaml'];
                 filesToRemove.forEach(file => {
-                  const filePath = path.join(outputDir, file);
+                  const filePath = path.join(nodejsDir, file);
                   if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
                   }
                 });
-
-                // Create nodejs directory structure (required for Lambda layers)
-                const nodejsDir = path.join(outputDir, 'nodejs');
-                if (!fs.existsSync(nodejsDir)) {
-                  fs.mkdirSync(nodejsDir);
-                }
-
-                // Move node_modules to nodejs/node_modules
-                const sourceModules = path.join(outputDir, 'node_modules');
-                const targetModules = path.join(nodejsDir, 'node_modules');
-                
-                if (fs.existsSync(sourceModules)) {
-                  fs.renameSync(sourceModules, targetModules);
-                }
 
                 console.log('Layer bundling completed successfully');
                 return true;
