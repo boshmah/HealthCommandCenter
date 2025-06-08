@@ -1,5 +1,5 @@
 {
-  "app": "node --no-warnings --loader ts-node/esm --experimental-specifier-resolution=node bin/cdk.ts",
+  "app": "npx tsx bin/cdk.ts",
   "watch": {
     "include": [
       "**"

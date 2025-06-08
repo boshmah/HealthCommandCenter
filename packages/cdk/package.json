@@ -7,20 +7,22 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk",
-    "deploy:cert": "cross-env npx cdk deploy CloudFrontCertificateStack --region us-east-1",
-    "deploy:domain": "cross-env npx cdk deploy DomainStack",
-    "deploy:auth": "cross-env npx cdk deploy AuthStack",
-    "deploy:api": "cross-env npx cdk deploy ApiStack",
-    "deploy:frontend": "cross-env npx cdk deploy FrontendStack",
-    "deploy:cloudfront": "cross-env npx cdk deploy CloudFrontStack",
-    "deploy:all": "cross-env npx cdk deploy --all",
-    "synth": "cross-env npx cdk synth"
+    "cdk": "npx cdk",
+    "deploy:domain": "npx cdk deploy DomainStack",
+    "deploy:cert": "npx cdk deploy CloudFrontCertificateStack",
+    "deploy:auth": "npx cdk deploy AuthStack",
+    "deploy:api": "npx cdk deploy ApiStack",
+    "deploy:web": "npx cdk deploy FrontendStack",
+    "deploy:cloudfront": "npx cdk deploy CloudFrontStack",
+    "deploy:all": "pnpm deploy:domain && pnpm deploy:cert && pnpm deploy:auth && pnpm deploy:api && pnpm deploy:web && pnpm deploy:cloudfront"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.130",
+    "@types/node": "^20.11.0",
     "@types/uuid": "^9.0.7",
-    "typescript": "~5.3.3"
+    "tsx": "^4.7.0",
+    "typescript": "~5.3.3",
+    "esbuild": "~0.21.0"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.481.0",

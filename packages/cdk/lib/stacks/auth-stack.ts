@@ -103,7 +103,7 @@ export class AuthStack extends cdk.Stack {
     const customMessageLambda = new nodejs.NodejsFunction(this, 'CustomMessageLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'handler',
-      entry: path.join(__dirname, '../lambdas/custom-message/index.ts'),
+      entry: path.join(__dirname, '../lambdas/api/auth/custom-message/index.ts'),
       functionName: 'health-command-center-custom-message',
       description: 'Customizes Cognito email messages for different scenarios',
       timeout: cdk.Duration.seconds(30), // Should complete quickly
@@ -112,12 +112,14 @@ export class AuthStack extends cdk.Stack {
         NODE_ENV: 'production',
       },
       logRetention: logs.RetentionDays.TWO_WEEKS,
-      // Specify the pnpm lock file path explicitly
-      depsLockFilePath: path.join(__dirname, '../../../../pnpm-lock.yaml'),
       bundling: {
         minify: true,
         sourceMap: false,
         target: 'es2020',
+        // Only mark AWS SDK as external since it's provided by Lambda runtime
+        externalModules: ['@aws-sdk/*'],
+        // Force local bundling instead of Docker
+        forceDockerBundling: false,
       },
     });
 

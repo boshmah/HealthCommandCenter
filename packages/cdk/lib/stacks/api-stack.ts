@@ -47,13 +47,6 @@ export interface ApiStackProps extends cdk.StackProps {
  * - GET    /foods/{foodId} - Get specific food entry
  * - PUT    /foods/{foodId} - Update food entry
  * - DELETE /foods/{foodId} - Delete food entry
- * 
- * Cost Considerations:
- * - API Gateway: $3.50 per million API calls
- * - Lambda: First 1M requests/month free
- * - DynamoDB: Pay-per-request (~$0.25 per million reads/writes)
- * - CloudWatch Logs: $0.50/GB ingested
- * - Total estimated cost for moderate usage: <$10/month
  */
 export class ApiStack extends cdk.Stack {
   /**
@@ -110,7 +103,7 @@ export class ApiStack extends cdk.Stack {
         allowCredentials: true,
       },
       // Enable compression to reduce data transfer costs
-      minimumCompressionSize: 1024,
+      minCompressionSize: cdk.Size.bytes(1024), // Use Size.bytes() instead of plain number
     });
 
     /**
@@ -163,7 +156,7 @@ export class ApiStack extends cdk.Stack {
     const createFoodLambda = new nodejs.NodejsFunction(this, 'CreateFoodLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'handler',
-      entry: path.join(__dirname, '../lambdas/api/create-food/index.ts'),
+      entry: path.join(__dirname, '../lambdas/api/food/create-food/index.ts'),
       functionName: 'health-command-center-create-food',
       description: 'Creates a new food entry with automatic calorie calculation',
       timeout: cdk.Duration.seconds(30),
@@ -177,6 +170,7 @@ export class ApiStack extends cdk.Stack {
         sourceMap: false,
         target: 'es2020',
         externalModules: ['aws-sdk'], // Provided by Lambda runtime
+        forceDockerBundling: false,
       },
     });
 
@@ -187,7 +181,7 @@ export class ApiStack extends cdk.Stack {
     const listFoodsLambda = new nodejs.NodejsFunction(this, 'ListFoodsLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'handler',
-      entry: path.join(__dirname, '../lambdas/api/list-foods/index.ts'),
+      entry: path.join(__dirname, '../lambdas/api/food/list-foods/index.ts'),
       functionName: 'health-command-center-list-foods',
       description: 'Lists food entries for a specific date',
       timeout: cdk.Duration.seconds(30),
@@ -201,6 +195,7 @@ export class ApiStack extends cdk.Stack {
         sourceMap: false,
         target: 'es2020',
         externalModules: ['aws-sdk'],
+        forceDockerBundling: false,
       },
     });
 
@@ -211,7 +206,7 @@ export class ApiStack extends cdk.Stack {
     const getFoodLambda = new nodejs.NodejsFunction(this, 'GetFoodLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'handler',
-      entry: path.join(__dirname, '../lambdas/api/get-food/index.ts'),
+      entry: path.join(__dirname, '../lambdas/api/food/get-food/index.ts'),
       functionName: 'health-command-center-get-food',
       description: 'Gets a specific food entry',
       timeout: cdk.Duration.seconds(30),
@@ -225,6 +220,7 @@ export class ApiStack extends cdk.Stack {
         sourceMap: false,
         target: 'es2020',
         externalModules: ['aws-sdk'],
+        forceDockerBundling: false,
       },
     });
 
@@ -235,7 +231,7 @@ export class ApiStack extends cdk.Stack {
     const updateFoodLambda = new nodejs.NodejsFunction(this, 'UpdateFoodLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'handler',
-      entry: path.join(__dirname, '../lambdas/api/update-food/index.ts'),
+      entry: path.join(__dirname, '../lambdas/api/food/update-food/index.ts'),
       functionName: 'health-command-center-update-food',
       description: 'Updates a food entry with automatic calorie recalculation',
       timeout: cdk.Duration.seconds(30),
@@ -249,6 +245,7 @@ export class ApiStack extends cdk.Stack {
         sourceMap: false,
         target: 'es2020',
         externalModules: ['aws-sdk'],
+        forceDockerBundling: false,
       },
     });
 
@@ -259,7 +256,7 @@ export class ApiStack extends cdk.Stack {
     const deleteFoodLambda = new nodejs.NodejsFunction(this, 'DeleteFoodLambda', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'handler',
-      entry: path.join(__dirname, '../lambdas/api/delete-food/index.ts'),
+      entry: path.join(__dirname, '../lambdas/api/food/delete-food/index.ts'),
       functionName: 'health-command-center-delete-food',
       description: 'Deletes a food entry',
       timeout: cdk.Duration.seconds(30),
@@ -273,6 +270,7 @@ export class ApiStack extends cdk.Stack {
         sourceMap: false,
         target: 'es2020',
         externalModules: ['aws-sdk'],
+        forceDockerBundling: false,
       },
     });
 
