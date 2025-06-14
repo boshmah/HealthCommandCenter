@@ -3,6 +3,6 @@
  */
 
 // Export all food-related types
-export * from './food.js';
+export * from './food-entity.js';
 
 export * from './user.js';

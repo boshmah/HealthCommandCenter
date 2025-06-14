@@ -1,7 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { randomUUID } from 'crypto';
+import { 
+  validateFoodInput, 
+  createFoodEntity, 
+  extractResponseData,
+  generateFoodId 
+} from './create-food-utils.js';
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-west-2' });
 const ddbDocClient = DynamoDBDocumentClient.from(client);
@@ -71,79 +76,45 @@ export const handler = async (
       };
     }
 
-    const { name, protein, carbs, fats, date } = parsedBody;
     const userId = event.requestContext.authorizer.claims.sub;
 
-    // Validate required fields
-    if (!name || typeof name !== 'string' || name.trim() === '') {
+    // Validate input data
+    const validationResult = validateFoodInput(parsedBody);
+    if (!validationResult.success) {
       return {
         statusCode: 400,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ error: 'Name is required' }),
+        body: JSON.stringify({ error: validationResult.error }),
       };
     }
 
-    // Parse and validate macronutrients
-    const proteinValue = parseFloat(protein) || 0;
-    const carbsValue = parseFloat(carbs) || 0;
-    const fatsValue = parseFloat(fats) || 0;
+    // Generate food ID
+    const foodId = generateFoodId();
 
-    // Calculate calories: protein = 4 cal/g, carbs = 4 cal/g, fats = 9 cal/g
-    const calories = Math.round((proteinValue * 4) + (carbsValue * 4) + (fatsValue * 9));
-
-    // Generate unique food ID
-    const foodId = `food-${randomUUID()}`;
-    const currentDate = new Date();
-    const timestamp = currentDate.getTime();
-    const isoString = currentDate.toISOString();
-    const foodDate = date || isoString.split('T')[0];
-
-    // Create food item
-    const foodItem = {
-      PK: `USER#${userId}`,
-      SK: `DATE#${foodDate}#TIME#${timestamp}#FOOD#${foodId}`,
-      entityType: 'FOOD',
-      foodId,
-      userId,
-      name: name.trim(),
-      protein: proteinValue,
-      carbs: carbsValue,
-      fats: fatsValue,
-      calories,
-      date: foodDate,
-      timestamp,
-      createdAt: isoString,
-      updatedAt: isoString,
-    };
+    // Create food entity
+    const foodEntity = createFoodEntity(userId, validationResult.data, foodId);
 
     // Save to DynamoDB
     try {
       await ddbDocClient.send(new PutCommand({
         TableName: TABLE_NAME,
-        Item: foodItem,
+        Item: foodEntity,
         ConditionExpression: 'attribute_not_exists(PK)',
       }));
 
       console.log('Food created successfully:', foodId);
+
+      // Extract response data
+      const responseData = extractResponseData(foodEntity);
 
       return {
         statusCode: 201,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          foodId,
-          name: foodItem.name,
-          protein: foodItem.protein,
-          carbs: foodItem.carbs,
-          fats: foodItem.fats,
-          calories: foodItem.calories,
-          date: foodItem.date,
-          createdAt: foodItem.createdAt,
-          updatedAt: foodItem.updatedAt,
-        }),
+        body: JSON.stringify(responseData),
       };
     } catch (error: any) {
       console.error('Error creating food:', error);
