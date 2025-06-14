@@ -5,9 +5,12 @@
 /**
  * Food entry entity stored in DynamoDB
  * PK: USER#<userId>
- * SK: FOOD#<date>#<timestamp>#<foodId>
+ * SK: DATE#<date>#TIME#<timestamp>#FOOD#<foodId>
  * 
- * Example SK: FOOD#2024-01-15#1705344000000#123e4567-e89b-12d3-a456-426614174000
+ * This allows efficient queries:
+ * - All foods for a user: PK = USER#<userId>, SK begins_with DATE#
+ * - Foods for a user on a specific date: PK = USER#<userId>, SK begins_with DATE#<date>#
+ * - Specific food item: PK = USER#<userId>, SK = DATE#<date>#TIME#<timestamp>#FOOD#<foodId>
  */
 export interface FoodEntity {
   // DynamoDB keys
@@ -67,16 +70,22 @@ export const FoodKeys = {
    */
   create: (userId: string, date: string, timestamp: number, foodId: string) => ({
     PK: `USER#${userId}`,
-    SK: `FOOD#${date}#${timestamp}#${foodId}`,
+    SK: `DATE#${date}#TIME#${timestamp}#FOOD#${foodId}`,
   }),
   
   /**
    * Generate the SK prefix for querying foods by date
    */
-  byDate: (date: string) => `FOOD#${date}#`,
+  byDate: (userId: string, date: string) => ({
+    PK: `USER#${userId}`,
+    SKPrefix: `DATE#${date}#`,
+  }),
   
   /**
-   * Generate the SK prefix for querying all foods
+   * Generate the SK prefix for querying all foods for a user
    */
-  prefix: () => 'FOOD#',
+  allForUser: (userId: string) => ({
+    PK: `USER#${userId}`,
+    SKPrefix: 'DATE#',
+  }),
 };

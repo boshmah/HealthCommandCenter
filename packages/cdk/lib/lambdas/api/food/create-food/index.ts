@@ -1,128 +1,190 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { v4 as uuidv4 } from 'uuid';
-import { FoodEntity, FoodInput, FoodKeys } from '@health-command-center/types';
+import { randomUUID } from 'crypto';
+
+const client = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-west-2' });
+const ddbDocClient = DynamoDBDocumentClient.from(client);
+
+const TABLE_NAME = process.env.TABLE_NAME;
 
 /**
  * Lambda handler for creating food entries
  * 
- * Endpoint: POST /foods
- * 
- * Request body:
- * {
- *   "name": "Chicken Breast",
- *   "protein": 30,
- *   "carbs": 0,
- *   "fats": 3,
- *   "date": "2024-01-15"
- * }
- * 
- * Calories are automatically calculated:
- * - Protein: 4 calories per gram
- * - Carbs: 4 calories per gram
- * - Fats: 9 calories per gram
+ * @param event - API Gateway proxy event
+ * @param context - Lambda context
+ * @returns API Gateway proxy result
  */
-export const handler: APIGatewayProxyHandler = async (event) => {
-  console.log('Create food request:', JSON.stringify(event, null, 2));
-
+export const handler = async (
+  event: APIGatewayProxyEvent,
+  context: Context
+): Promise<APIGatewayProxyResult> => {
   try {
-    // Extract user ID from Cognito authorizer
-    const userId = event.requestContext.authorizer?.claims?.sub;
-    if (!userId) {
+    // Log the incoming request
+    console.log('Create food request:', JSON.stringify(event));
+
+    // Validate environment variables
+    if (!TABLE_NAME) {
+      console.error('TABLE_NAME environment variable is not set');
+      return {
+        statusCode: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ error: 'Internal server error' }),
+      };
+    }
+
+    // Check authorization
+    if (!event.requestContext?.authorizer?.claims?.sub) {
       return {
         statusCode: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
-    // Parse and validate request body
+    // Validate request body
     if (!event.body) {
       return {
         statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ error: 'Request body is required' }),
       };
     }
 
-    const input: FoodInput = JSON.parse(event.body);
-    
-    // Calculate calories automatically
-    const calories = calculateCalories(input.protein, input.carbs, input.fats);
+    // Parse request body
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(event.body);
+    } catch (error) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ error: 'Invalid request body' }),
+      };
+    }
 
-    // Generate IDs and timestamps
-    const foodId = uuidv4();
-    const timestamp = Date.now();
-    const now = new Date().toISOString();
+    const { name, protein, carbs, fats, date } = parsedBody;
+    const userId = event.requestContext.authorizer.claims.sub;
 
-    // Create DynamoDB keys
-    const keys = FoodKeys.create(userId, input.date, timestamp, foodId);
+    // Validate required fields
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      return {
+        statusCode: 400,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ error: 'Name is required' }),
+      };
+    }
 
-    // Create food entity
-    const foodEntity: FoodEntity = {
-      ...keys,
+    // Parse and validate macronutrients
+    const proteinValue = parseFloat(protein) || 0;
+    const carbsValue = parseFloat(carbs) || 0;
+    const fatsValue = parseFloat(fats) || 0;
+
+    // Calculate calories: protein = 4 cal/g, carbs = 4 cal/g, fats = 9 cal/g
+    const calories = Math.round((proteinValue * 4) + (carbsValue * 4) + (fatsValue * 9));
+
+    // Generate unique food ID
+    const foodId = `food-${randomUUID()}`;
+    const currentDate = new Date();
+    const timestamp = currentDate.getTime();
+    const isoString = currentDate.toISOString();
+    const foodDate = date || isoString.split('T')[0];
+
+    // Create food item
+    const foodItem = {
+      PK: `USER#${userId}`,
+      SK: `DATE#${foodDate}#TIME#${timestamp}#FOOD#${foodId}`,
       entityType: 'FOOD',
       foodId,
       userId,
-      date: input.date,
-      timestamp,
-      name: input.name,
-      protein: input.protein,
-      carbs: input.carbs,
-      fats: input.fats,
+      name: name.trim(),
+      protein: proteinValue,
+      carbs: carbsValue,
+      fats: fatsValue,
       calories,
-      createdAt: now,
-      updatedAt: now,
+      date: foodDate,
+      timestamp,
+      createdAt: isoString,
+      updatedAt: isoString,
     };
-
-    // Initialize DynamoDB client
-    const client = new DynamoDBClient({});
-    const docClient = DynamoDBDocumentClient.from(client);
 
     // Save to DynamoDB
-    await docClient.send(new PutCommand({
-      TableName: process.env.TABLE_NAME!,
-      Item: foodEntity,
-      ConditionExpression: 'attribute_not_exists(PK)', // Prevent overwrites
-    }));
+    try {
+      await ddbDocClient.send(new PutCommand({
+        TableName: TABLE_NAME,
+        Item: foodItem,
+        ConditionExpression: 'attribute_not_exists(PK)',
+      }));
 
-    console.log('Food created successfully:', foodId);
+      console.log('Food created successfully:', foodId);
 
-    // Return created food
-    return {
-      statusCode: 201,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        foodId: foodEntity.foodId,
-        name: foodEntity.name,
-        protein: foodEntity.protein,
-        carbs: foodEntity.carbs,
-        fats: foodEntity.fats,
-        calories: foodEntity.calories,
-        date: foodEntity.date,
-        createdAt: foodEntity.createdAt,
-        updatedAt: foodEntity.updatedAt,
-      }),
-    };
+      return {
+        statusCode: 201,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          foodId,
+          name: foodItem.name,
+          protein: foodItem.protein,
+          carbs: foodItem.carbs,
+          fats: foodItem.fats,
+          calories: foodItem.calories,
+          date: foodItem.date,
+          createdAt: foodItem.createdAt,
+          updatedAt: foodItem.updatedAt,
+        }),
+      };
+    } catch (error: any) {
+      console.error('Error creating food:', error);
+      
+      if (error.name === 'ConditionalCheckFailedException') {
+        return {
+          statusCode: 409,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ error: 'Food item already exists' }),
+        };
+      }
+
+      if (error.name === 'ProvisionedThroughputExceededException') {
+        return {
+          statusCode: 503,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ error: 'Service temporarily unavailable' }),
+        };
+      }
+
+      return {
+        statusCode: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ error: 'Internal server error' }),
+      };
+    }
   } catch (error) {
     console.error('Error creating food:', error);
     
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ error: 'Internal server error' }),
     };
   }
 };
-
-/**
- * Calculate calories from macronutrients
- * @param protein - Grams of protein (4 cal/g)
- * @param carbs - Grams of carbohydrates (4 cal/g)
- * @param fats - Grams of fats (9 cal/g)
- * @returns Total calories
- */
-function calculateCalories(protein: number, carbs: number, fats: number): number {
-  return Math.round((protein * 4) + (carbs * 4) + (fats * 9));
-}
