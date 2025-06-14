@@ -54,6 +54,21 @@ export function parseMacronutrient(value: any, fieldName: string): number | { er
     return 0;
   }
 
+  // Check for arrays and objects first
+  if (typeof value === 'object') {
+    return { error: `Invalid ${fieldName} value` };
+  }
+
+  // For strings, check if it's a pure number (including scientific notation)
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    // Updated regex to support scientific notation
+    if (!/^-?\d*\.?\d+([eE][+-]?\d+)?$/.test(trimmed)) {
+      return { error: `Invalid ${fieldName} value` };
+    }
+    value = trimmed;
+  }
+
   const parsed = parseFloat(value);
   
   if (isNaN(parsed)) {
@@ -88,6 +103,26 @@ export function isValidDateFormat(date: string): boolean {
 
   // Check if it's a valid date
   const [year, month, day] = date.split('-').map(Number);
+  
+  // Handle very early years that JavaScript Date might not support well
+  if (year < 100) {
+    // For years 1-99, check basic validity
+    if (year < 1 || year > 9999) return false;
+    if (month < 1 || month > 12) return false;
+    
+    // Days in month check
+    const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    
+    // Leap year check for February
+    if (month === 2) {
+      const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+      const maxDay = isLeapYear ? 29 : 28;
+      return day >= 1 && day <= maxDay;
+    }
+    
+    return day >= 1 && day <= daysInMonth[month - 1];
+  }
+  
   const dateObj = new Date(year, month - 1, day);
   
   return dateObj.getFullYear() === year &&

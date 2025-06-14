@@ -7,9 +7,10 @@
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "test:unit": "jest tests/unit",
-    "test:unit:watch": "jest tests/unit --watch",
-    "test:unit:coverage": "jest tests/unit --coverage",
+    "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules jest tests/unit --forceExit",
+    "test:unit:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest tests/unit --watch",
+    "test:unit:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest tests/unit --coverage --forceExit",
+    "test:unit:debug": "cross-env NODE_OPTIONS=--experimental-vm-modules jest tests/unit --detectOpenHandles --forceExit",
     "synth": "pnpm --filter @health-command-center/cdk synth",
     "deploy:cert": "pnpm --filter @health-command-center/cdk deploy:cert",
     "deploy:domain": "pnpm --filter @health-command-center/cdk deploy:domain",

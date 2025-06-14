@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { isValidDateFormat, getCurrentDate } from '../../../../packages/cdk/lib/lambdas/api/food/create-food/create-food-utils';
 
 describe('Date Validation Functions', () => {
@@ -107,10 +108,13 @@ describe('Date Validation Functions', () => {
 
   describe('getCurrentDate', () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      jest.useFakeTimers({
+        doNotFake: ['nextTick', 'setImmediate']
+      });
     });
 
     afterEach(() => {
+      jest.runOnlyPendingTimers();
       jest.useRealTimers();
     });
 

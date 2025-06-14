@@ -34,8 +34,15 @@ export default {
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '/cdk.out/'],
   clearMocks: true,
   restoreMocks: true,
-  // Force CommonJS for tests to avoid ESM issues
-  testEnvironmentOptions: {
-    customExportConditions: ['node', 'require']
-  }
+  //settings to fix hanging tests
+  testTimeout: 10000,
+  detectOpenHandles: true,
+  forceExit: true,
+  maxWorkers: '50%',
+  // Provide jest globals for ESM
+  injectGlobals: true,
+  // Transform the mocks
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$))'
+  ],
 };

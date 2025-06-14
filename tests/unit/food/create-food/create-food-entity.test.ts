@@ -1,19 +1,31 @@
-import { createFoodEntity, ValidatedFoodData } from '../../../../packages/cdk/lib/lambdas/api/food/create-food/create-food-utils';
-import { randomUUID } from 'crypto';
+import { jest } from '@jest/globals';
+import type { ValidatedFoodData } from '../../../../packages/cdk/lib/lambdas/api/food/create-food/create-food-utils.js';
 
-// Mock crypto module
-jest.mock('crypto', () => ({
-  randomUUID: jest.fn(() => 'auto-generated-uuid')
+// Create mock before imports
+const mockRandomUUID = jest.fn();
+
+// Use unstable_mockModule for ESM
+jest.unstable_mockModule('crypto', () => ({
+  randomUUID: mockRandomUUID
 }));
+
+// Dynamic import after mocking - only import the function, not the type
+const { createFoodEntity } = await import('../../../../packages/cdk/lib/lambdas/api/food/create-food/create-food-utils.js');
 
 describe('createFoodEntity', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.useFakeTimers();
+    jest.useFakeTimers({
+      doNotFake: ['nextTick', 'setImmediate'] // Don't fake these to avoid hanging
+    });
     jest.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
+
+    // Reset the mock to default value
+    mockRandomUUID.mockReturnValue('12345678-1234-1234-1234-123456789012');
   });
 
   afterEach(() => {
+    jest.runOnlyPendingTimers();
     jest.useRealTimers();
   });
 
@@ -81,9 +93,9 @@ describe('createFoodEntity', () => {
 
       const entity = createFoodEntity('user-789', validatedData);
 
-      expect(entity.foodId).toBe('food-auto-generated-uuid');
-      expect(entity.SK).toContain('FOOD#food-auto-generated-uuid');
-      expect(randomUUID).toHaveBeenCalledTimes(1);
+      expect(entity.foodId).toBe('food-12345678-1234-1234-1234-123456789012');
+      expect(entity.SK).toContain('FOOD#food-12345678-1234-1234-1234-123456789012');
+      expect(mockRandomUUID).toHaveBeenCalledTimes(1);
     });
 
     it('should not call randomUUID when foodId is provided', () => {
@@ -96,9 +108,10 @@ describe('createFoodEntity', () => {
         date: '2024-01-15'
       };
 
+      mockRandomUUID.mockClear();
       createFoodEntity('user-123', validatedData, 'provided-id');
 
-      expect(randomUUID).not.toHaveBeenCalled();
+      expect(mockRandomUUID).not.toHaveBeenCalled();
     });
   });
 
@@ -130,8 +143,8 @@ describe('createFoodEntity', () => {
       jest.setSystemTime(new Date('2024-03-20T15:30:45.123Z'));
       const entity = createFoodEntity('user-1', validatedData, 'food-xyz');
 
-      expect(entity.SK).toBe('DATE#2024-03-20#TIME#1710949845123#FOOD#food-xyz');
-      expect(entity.timestamp).toBe(1710949845123);
+      expect(entity.SK).toBe('DATE#2024-03-20#TIME#1710948645123#FOOD#food-xyz');
+      expect(entity.timestamp).toBe(1710948645123);
     });
   });
 

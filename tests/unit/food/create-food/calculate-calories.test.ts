@@ -30,7 +30,7 @@ describe('calculateCalories', () => {
   describe('edge cases', () => {
     it('should handle negative values (though not valid in real use)', () => {
       expect(calculateCalories(-10, -5, -2)).toBe(-78); // (-10*4) + (-5*4) + (-2*9) = -40 + -20 + -18 = -78
-      expect(calculateCalories(-1, 5, 2)).toBe(14); // (-1*4) + (5*4) + (2*9) = -4 + 20 + 18 = 34
+      expect(calculateCalories(-1, 5, 2)).toBe(34); // (-1*4) + (5*4) + (2*9) = -4 + 20 + 18 = 34
     });
 
     it('should handle very large values', () => {
@@ -40,7 +40,7 @@ describe('calculateCalories', () => {
 
     it('should handle mixed positive and negative values', () => {
       expect(calculateCalories(10, -5, 3)).toBe(47); // (10*4) + (-5*4) + (3*9) = 40 + -20 + 27 = 47
-      expect(calculateCalories(-10, 20, -5)).toBe(25); // (-10*4) + (20*4) + (-5*9) = -40 + 80 + -45 = -5
+      expect(calculateCalories(-10, 20, -5)).toBe(-5); // (-10*4) + (20*4) + (-5*9) = -40 + 80 + -45 = -5
     });
   });
 

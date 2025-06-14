@@ -1,12 +1,16 @@
+import { jest } from '@jest/globals';
 import { validateFoodInput, FoodInputData } from '../../../../packages/cdk/lib/lambdas/api/food/create-food/create-food-utils';
 
 describe('validateFoodInput', () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    jest.useFakeTimers({
+      doNotFake: ['nextTick', 'setImmediate']
+    });
     jest.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
   });
 
   afterEach(() => {
+    jest.runOnlyPendingTimers();
     jest.useRealTimers();
   });
 
