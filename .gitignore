@@ -157,6 +157,10 @@ out/
 .env.local
 .env.*.local
 
+# Test environment files
+.env.test
+.env.local
+
 # AWS CDK
 cdk.out/
 *.js

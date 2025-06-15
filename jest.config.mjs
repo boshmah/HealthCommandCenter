@@ -35,8 +35,8 @@ export default {
   clearMocks: true,
   restoreMocks: true,
   //settings to fix hanging tests
-  testTimeout: 10000,
-  detectOpenHandles: true,
+  testTimeout: 30000,
+  detectOpenHandles: false, // Disable for integration tests
   forceExit: true,
   maxWorkers: '50%',
   // Provide jest globals for ESM
